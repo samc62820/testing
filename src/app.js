@@ -1,7 +1,8 @@
 const express = require('express');
 const connectDB = require("./config/database");
 const User = require("./models/user");
-const  schema = require("./helpers/userValidation");
+const  validateUserSchema = require("./helpers/userValidation");
+const validateUpdateUser = require("./helpers/userValidation");
 
 const app = express();
 
@@ -9,13 +10,8 @@ const app = express();
 app.use(express.json());
 
 //Add user to the database
-app.post("/addUser",  async(req,res)=>{
+app.post("/addUser",validateUserSchema,  async(req,res)=>{
     const user = new User(req.body);
-    const {error,value} = schema.validate(req.body,{abortEarly: False});
-    if(error){
-        console.log(error);
-        return res.send("Invalid request.")
-    }
     try{
         await user.save();
         res.send("User added successfully!");
@@ -48,8 +44,8 @@ app.get("/user/:userId", async(req,res)=>{
 });
 
 //edit user
-app.patch("/editUser", async(req,res)=>{
-    const userId = req.body.userId;
+app.patch("/editUser/:userId", validateUpdateUser, async(req,res)=>{
+    const userId = req.params.userId;
     const user = req.body;
     try{
        await User.findByIdAndUpdate({ _id: userId}, user);
